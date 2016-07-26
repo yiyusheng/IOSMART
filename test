@@ -1,0 +1,59 @@
+# Visualize SMART and IO from disk of C1 servers
+# plot important SMART attributes and all IO attributes from June 1st to Auguest 1st for each server/disk
+# Author: yiyusheng
+# Date: 2016-07-19
+rm(list = ls())
+source('head.R')
+require('ggplot2')
+load(file.path(dir_data,'getSample.Rda'))
+source(file.path(dir_code,'visualizeSampleFunc.R'))
+smartName <- names(SMARTC1)[7:21]
+####################################
+# S1. sort and split for plot
+IOC1A <- subset(IOC1,time > as.POSIXct('2014-06-01',tz = 'UTC') & time < as.POSIXct('2014-08-01',tz = 'UTC'))
+IOC1A <- IOC1A[order(IOC1A$svrid,IOC1A$time),]
+SMARTC1A<- subset(SMARTC1,time > as.POSIXct('2014-06-01',tz = 'UTC') & time < as.POSIXct('2014-08-01',tz = 'UTC'))
+SMARTC1A <- SMARTC1A[order(SMARTC1A$svrid,SMARTC1A$time),]
+IOsplit <- split(IOC1A,IOC1A$svrid)
+SMARTsplit <- split(SMARTC1A,SMARTC1A$svrid)
+
+# S2. generate and save figure
+# IOp <- list2matrix(lapply(IOsplit,plotIOSample))
+# SMARTp <- list2matrix(lapply(SMARTsplit,plotSMARTattr))
+# save(IOp,SMARTp,file = file.path(dir_data,'visualizeSample.RDa'))
+
+# S3. plot figure with multiplot
+load(file.path(dir_data,'visualizeSample.RDa'))
+
+# F1. func for IO
+plotIOSample <- function(data){
+  p <- list()
+  p[[1]] <- ggplot(data,aes(x = time,y = read))+ geom_line(size = 1) + ylab('read')
+  p[[2]] <- ggplot(data,aes(x = time,y = write)) + geom_line(size = 1) + ylab('write')
+  p[[3]] <- ggplot(data,aes(x = time,y = util)) + geom_line(size = 1)
+  p
+}
+
+# F2. func for SMART
+plotSMARTattr <- function(data){
+  p <- list()
+  for(i in 1:length(smartName)){
+    eval(parse(text = sprintf('p[[i]] <- ggplot(data,aes(x = time,y = %s)) + 
+                              geom_line(size = 1)',smartName[i])))
+  }
+  p
+}
+
+# F3. make list to matrix
+list2matrix <- function(list){
+  rlen <- length(list)
+  clen <- length(list[[1]])
+  mat <- matrix(list(),nrow = rlen,ncol = clen)
+  for(i in 1:rlen){
+    for(j in 1:clen){
+      mat[[i,j]] <- list[[i]][j]
+    }
+  }
+  mat <- data.frame(mat)
+  mat$svrid <- names(list)
+}
