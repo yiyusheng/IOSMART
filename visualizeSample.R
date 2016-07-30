@@ -59,6 +59,6 @@ SMARTNp <- SMARTNp[order(IONp$svrid),]
 require(doParallel)
 ck <- makeCluster(40, outfile = '')
 registerDoParallel(ck)
-rF <- foreach(i = svridSetF,.combine = rbind,.verbose = T) %dopar% svridPlotF(i)
+# rF <- foreach(i = svridSetF,.combine = rbind,.verbose = T) %dopar% svridPlotF(i)
 rN <- foreach(i = svridSetN,.combine = rbind,.verbose = T) %dopar% svridPlotN(i)
 stopCluster(ck) 
